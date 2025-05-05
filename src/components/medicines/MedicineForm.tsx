@@ -14,9 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import axios from "axios"
+import useStore from "@/Store/Store";
 
 const categories = [
-  "Pain Management",
+  "Pain Killer",
   "Antibiotics",
   "Allergies", 
   "Digestive Health",
@@ -30,9 +32,12 @@ const categories = [
   "Heart Health",
 ];
 
-const MedicineForm = () => {
+const   MedicineForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { setMedicine , medicine} = useStore()
+
+  console.log("this is the medicine", medicine)
   
   const [formData, setFormData] = useState({
     name: "",
@@ -54,11 +59,22 @@ const MedicineForm = () => {
     setFormData(prev => ({ ...prev, category: value }));
   };
   
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    
-    // In a real app, we'd save this to a database
-    console.log("Medicine data:", formData);
+    try {
+      const result = await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL
+      }/create-medicine`, {
+        name: formData.name,
+        description: formData.description,
+        batchNumber: formData.batchNumber,
+        expiryDate: formData.expiryDate,
+        menufacturer: formData.manufacturer,
+        price: formData.price,
+        stock: formData.stock,
+        category: formData.category
+      })
+      const data = result.data;
+      setMedicine(data);
     
     toast({
       title: "Medicine Added",
@@ -67,6 +83,13 @@ const MedicineForm = () => {
     
     // Navigate back to medicines list
     navigate("/medicines");
+
+    }catch(err) {
+      console.log("something went wrong here !", err);
+
+    }
+    
+    
   };
   
   return (

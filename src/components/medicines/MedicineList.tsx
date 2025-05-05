@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { medicines, Medicine } from "@/utils/dummyData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,17 +20,29 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PlusCircle, Search, MoreVertical, Pencil, Trash, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
+import useStore from "@/Store/Store";
 
 const MedicineList = () => {
+
+  const { AllMedicine, loading, getAllMedicine } = useStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [allMedicines] = useState<Medicine[]>(medicines);
+  const [allMedicines, setallMecines] = useState(AllMedicine);
+
+  
+
+  
   
   // Filter medicines based on search term
-  const filteredMedicines = allMedicines.filter(medicine => 
+  const filteredMedicines = AllMedicine?.result?.filter(medicine => 
     medicine.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    medicine.batchNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    medicine.batch.toLowerCase().includes(searchTerm.toLowerCase()) ||
     medicine.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(() => {
+    getAllMedicine()
+
+  },[])
   
   const isLowStock = (stock: number) => stock < 10;
   const isExpiring = (date: string) => {
@@ -76,13 +88,13 @@ const MedicineList = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredMedicines.length > 0 ? (
+              {filteredMedicines?.length > 0 ? (
                 filteredMedicines.map((medicine) => (
-                  <TableRow key={medicine.id}>
+                  <TableRow key={medicine._id}>
                     <TableCell className="font-medium">{medicine.name}</TableCell>
-                    <TableCell>{medicine.batchNumber}</TableCell>
+                    <TableCell>{medicine.batch}</TableCell>
                     <TableCell>{medicine.category}</TableCell>
-                    <TableCell>${medicine.price.toFixed(2)}</TableCell>
+                    <TableCell>Rs.{!isNaN(Number(medicine.price)) ? Number(medicine.price).toFixed(2) : "N/A"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <span>{medicine.stock}</span>

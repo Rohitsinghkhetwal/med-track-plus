@@ -11,6 +11,7 @@ import CustomersPage from "./pages/CustomersPage";
 import InventoryPage from "./pages/InventoryPage";
 import NotFound from "./pages/NotFound";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/sales/new" element={<SalesPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/customers/add" element={<CustomersPage/>}/>
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

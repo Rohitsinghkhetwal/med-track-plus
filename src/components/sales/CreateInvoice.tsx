@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,58 +27,68 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Trash, Plus, FileText, Printer } from "lucide-react";
-import { medicines, customers, Medicine, Customer, SaleItem } from "@/utils/dummyData";
+import {
+  medicines,
+  customers,
+  Medicine,
+  Customer,
+  SaleItem,
+} from "@/utils/dummyData";
+import useStore from "@/Store/Store";
 
 const CreateInvoice = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+  const { AllCustomer, AllMedicine } = useStore();
+  console.log("AllCustomer", JSON.stringify(AllMedicine, null, 2));
+
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
-  const [items, setItems] = useState<SaleItem[]>([]);
+  const [items, setItems] = useState([]);
   const [selectedMedicine, setSelectedMedicine] = useState<string>("");
   const [quantity, setQuantity] = useState<number>(1);
-  
+  const [paymentStatus, setPaymentStatus] = useState("");
+
+
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + item.total, 0);
   const taxRate = 0.08; // 8%
   const tax = subtotal * taxRate;
   const discount = 0; // Could be modified in a real application
   const total = subtotal + tax - discount;
-  
+
   const handleAddItem = () => {
     if (!selectedMedicine || quantity <= 0) return;
-    
-    const medicine = medicines.find(m => m.id === selectedMedicine);
+
+    const medicine = AllMedicine.result.find((m) => m._id === selectedMedicine);
     if (!medicine) return;
-    
-    const newItem: SaleItem = {
+
+    const newItem = {
       id: `item-${Date.now()}`,
-      medicineId: medicine.id,
       medicineName: medicine.name,
       quantity,
       unitPrice: medicine.price,
-      total: medicine.price * quantity
+      total: medicine.price * quantity,
     };
-    
-    setItems([...items, newItem]);
+
+    setItems((prevItems) => [...prevItems, newItem]);
     setSelectedMedicine("");
     setQuantity(1);
   };
-  
+
   const handleRemoveItem = (id: string) => {
-    setItems(items.filter(item => item.id !== id));
+    setItems(items.filter((item) => item.id !== id));
   };
-  
+
   const handleCreateInvoice = () => {
     if (items.length === 0 || !selectedCustomer) {
       toast({
         title: "Missing Information",
         description: "Please select a customer and add at least one item.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     // In a real app, we would save this to a database
     console.log({
       customer: selectedCustomer,
@@ -87,33 +96,36 @@ const CreateInvoice = () => {
       subtotal,
       tax,
       discount,
-      total
+      total,
+      paymentStatus
     });
     
+
     toast({
       title: "Invoice Created",
       description: "The invoice has been successfully created.",
     });
-    
+
     navigate("/sales");
   };
-  
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Create New Invoice</h2>
-          <p className="text-muted-foreground">Add items and generate an invoice</p>
+          <p className="text-muted-foreground">
+            Add items and generate an invoice
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
             <FileText className="mr-2 h-4 w-4" />
             Save Draft
           </Button>
-          <Button onClick={handleCreateInvoice}>Create Invoice</Button>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           <Card>
@@ -133,42 +145,55 @@ const CreateInvoice = () => {
                       <SelectValue placeholder="Select customer" />
                     </SelectTrigger>
                     <SelectContent>
-                      {customers.map(customer => (
-                        <SelectItem key={customer.id} value={customer.id}>
+                      {AllCustomer.map((customer) => (
+                        <SelectItem key={customer._id} value={customer}>
                           {customer.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 {selectedCustomer && (
                   <div className="bg-muted p-4 rounded-md">
-                    {(() => {
-                      const customer = customers.find(c => c.id === selectedCustomer);
-                      return customer ? (
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <div>
-                            <strong>Name:</strong> {customer.name}
-                          </div>
-                          <div>
-                            <strong>Phone:</strong> {customer.phone}
-                          </div>
-                          <div>
-                            <strong>Email:</strong> {customer.email}
-                          </div>
-                          <div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <strong>Name:</strong> {selectedCustomer.name}
+                      </div>
+                      <div>
+                        <strong>Phone:</strong> {selectedCustomer.phone}
+                      </div>
+                      <div>
+                        <strong>Email:</strong> {selectedCustomer.email}
+                      </div>
+                      {/* <div>
                             <strong>Address:</strong> {customer.address}
-                          </div>
-                        </div>
-                      ) : null;
-                    })()}
+                          </div> */}
+                    </div>
                   </div>
                 )}
               </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2 mt-2">
+                  <Label htmlFor="customer">Payment Status</Label>
+                  <Select
+                    value={paymentStatus}
+                    onValueChange={setPaymentStatus}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Invoice Items</CardTitle>
@@ -187,9 +212,9 @@ const CreateInvoice = () => {
                         <SelectValue placeholder="Select medicine" />
                       </SelectTrigger>
                       <SelectContent>
-                        {medicines.map(medicine => (
-                          <SelectItem key={medicine.id} value={medicine.id}>
-                            {medicine.name} - ${medicine.price.toFixed(2)}
+                        {AllMedicine.result?.map((medicine) => (
+                          <SelectItem key={medicine._id} value={medicine._id}>
+                            {medicine.name} Rs-{medicine.price}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -212,7 +237,7 @@ const CreateInvoice = () => {
                     </Button>
                   </div>
                 </div>
-                
+
                 <div className="border rounded-md overflow-auto">
                   <Table>
                     <TableHeader>
@@ -226,12 +251,18 @@ const CreateInvoice = () => {
                     </TableHeader>
                     <TableBody>
                       {items.length > 0 ? (
-                        items.map(item => (
+                        items.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.medicineName}</TableCell>
-                            <TableCell className="text-right">{item.quantity}</TableCell>
-                            <TableCell className="text-right">${item.unitPrice.toFixed(2)}</TableCell>
-                            <TableCell className="text-right">${item.total.toFixed(2)}</TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              Rs. {item.unitPrice}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              Rs. {item.total}
+                            </TableCell>
                             <TableCell>
                               <Button
                                 variant="ghost"
@@ -257,7 +288,7 @@ const CreateInvoice = () => {
             </CardContent>
           </Card>
         </div>
-        
+
         <div>
           <Card className="sticky top-6">
             <CardHeader>
@@ -267,34 +298,31 @@ const CreateInvoice = () => {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>Rs. {subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax (8%):</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>Rs. {tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Discount:</span>
-                  <span>${discount.toFixed(2)}</span>
+                  <span>Rs. {discount.toFixed(2)}</span>
                 </div>
                 <div className="border-t pt-2 flex justify-between font-medium">
                   <span>Total:</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>Rs. {total.toFixed(2)}</span>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   onClick={handleCreateInvoice}
                   disabled={items.length === 0 || !selectedCustomer}
                 >
                   Create Invoice
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                >
+                <Button variant="outline" className="w-full">
                   <Printer className="mr-2 h-4 w-4" />
                   Preview
                 </Button>

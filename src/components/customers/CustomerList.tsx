@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { customers, Customer, sales } from "@/utils/dummyData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,16 +44,21 @@ import {
   HomeIcon,
   ShoppingCart
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate} from "react-router-dom";
+import useStore from "@/Store/Store";
 
 const CustomerList = () => {
+  const navigate = useNavigate();
+  const {getAllCustomer, AllCustomer, loading, AllMedicine } = useStore();
+  // console.log("this is the all customer", AllMedicine)
+  console.log('AllMedicine', JSON.stringify(AllMedicine, null, 2))
   const [searchTerm, setSearchTerm] = useState("");
   const [allCustomers] = useState<Customer[]>(customers);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   
   // Filter customers based on search term
-  const filteredCustomers = allCustomers.filter(customer => 
+  const filteredCustomers = AllCustomer.filter(customer => 
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.phone.toLowerCase().includes(searchTerm.toLowerCase())
@@ -62,6 +67,12 @@ const CustomerList = () => {
   const getCustomerPurchases = (customerId: string) => {
     return sales.filter(sale => sale.customerId === customerId);
   };
+
+
+  useEffect(() => {
+    getAllCustomer();
+
+  },[])
 
   return (
     <div className="space-y-4">
@@ -77,7 +88,7 @@ const CustomerList = () => {
           />
         </div>
         <Link to="/customers/add">
-          <Button>
+          <Button onClick={() => navigate("/customers/add")}>
             <UserRoundPlus className="mr-2 h-4 w-4" />
             Add Customer
           </Button>
@@ -96,56 +107,65 @@ const CustomerList = () => {
                 <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
-              {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell className="font-medium">{customer.name}</TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.email}</TableCell>
-                    <TableCell>
-                      {getCustomerPurchases(customer.id).length}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          >
-                            <span className="sr-only">Open menu</span>
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => {
-                            setSelectedCustomer(customer);
-                            setIsDetailsOpen(true);
-                          }}>
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <UserRoundPen className="mr-2 h-4 w-4" />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
-                            <UserRoundMinus className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+            {
+              loading ? (
+                <h2 className="text-sm font-semibold text-center">Loading..</h2>
+
+              ) : (
+                <TableBody>
+                {filteredCustomers?.length > 0 ? (
+                  filteredCustomers.map((customer) => (
+                    <TableRow key={customer._id}>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell>{customer.phone}</TableCell>
+                      <TableCell>{customer.email}</TableCell>
+                      <TableCell> 
+                        {customer.purchase}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                            >
+                              <span className="sr-only">Open menu</span>
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setSelectedCustomer(customer);
+                              setIsDetailsOpen(true);
+                            }}>
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <UserRoundPen className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-red-600">
+                              <UserRoundMinus className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-4">
+                      No customers found
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-4">
-                    No customers found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
+                )}
+              </TableBody>
+
+              )
+            }
+           
           </Table>
         </div>
       </div>

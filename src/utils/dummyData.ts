@@ -1,3 +1,7 @@
+import useStore from "@/Store/Store";
+
+// const { AllMedicine } = useStore();
+
 
 export type Medicine = {
   id: string;
@@ -247,11 +251,13 @@ export const getLowStockMedicines = (): Medicine[] => {
 
 // Helper function for expired or nearly expired medicines (within 30 days)
 export const getExpiringMedicines = (): Medicine[] => {
+  const { AllMedicine } = useStore();
+  
   const today = new Date();
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(today.getDate() + 30);
   
-  return medicines.filter(med => {
+  return AllMedicine?.result?.filter(med => {
     const expiryDate = new Date(med.expiryDate);
     return expiryDate <= thirtyDaysFromNow;
   });

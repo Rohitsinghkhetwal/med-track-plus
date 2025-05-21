@@ -12,11 +12,15 @@ import {
 } from "lucide-react";
 import { sales, medicines, customers, getLowStockMedicines, getExpiringMedicines } from "@/utils/dummyData";
 import { Link } from "react-router-dom";
+import useStore from "@/Store/Store";
 
 const Dashboard = () => {
-  const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
-  const totalMedicines = medicines.length;
-  const totalCustomers = customers.length;
+  const { AllMedicine, AllCustomer, AllSales} = useStore()
+
+  console.log("this is the sales", AllSales)
+  const totalSales = AllSales.reduce((sum, sale) => sum + sale.subtotal, 0);
+  const totalMedicines = AllMedicine?.result.length;
+  const totalCustomers = AllCustomer.length;
   
   const lowStockCount = getLowStockMedicines().length;
   const expiringCount = getExpiringMedicines().length;
@@ -51,7 +55,7 @@ const Dashboard = () => {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totalSales.toFixed(2)}</div>
+            <div className="text-2xl font-bold">Rs {totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
               +20.1% from last month
             </p>
@@ -134,21 +138,21 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSales.map((sale) => (
-                    <tr key={sale.id} className="border-t hover:bg-muted/50">
-                      <td className="p-2">{sale.invoiceNumber}</td>
-                      <td className="p-2">{sale.customerName}</td>
-                      <td className="p-2">{sale.date}</td>
-                      <td className="p-2">${sale.total.toFixed(2)}</td>
+                  {AllSales.map((sale) => (
+                    <tr key={sale._id} className="border-t hover:bg-muted/50">
+                      <td className="p-2">{sale.invoice}</td>
+                      <td className="p-2">{sale?.customer?.name}</td>
+                      <td className="p-2">{sale.updatedAt}</td>
+                      <td className="p-2">Rs {sale?.subtotal}</td>
                       <td className="p-2">
                         <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                          sale.status === 'paid' 
+                          sale.paymentStatus === 'paid' 
                             ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' 
-                            : sale.status === 'pending' 
+                            : sale.paymentStatus === 'pending' 
                             ? 'bg-yellow-50 text-yellow-800 ring-1 ring-yellow-600/20'
                             : 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
                         }`}>
-                          {sale.status.charAt(0).toUpperCase() + sale.status.slice(1)}
+                          {sale.paymentStatus}
                         </span>
                       </td>
                     </tr>
@@ -202,7 +206,7 @@ const Dashboard = () => {
               <CardContent className="space-y-2">
                 {getExpiringMedicines().length > 0 ? (
                   getExpiringMedicines().map(medicine => (
-                    <div key={medicine.id} className="flex justify-between items-center border-b pb-2">
+                    <div key={medicine._id} className="flex justify-between items-center border-b pb-2">
                       <div>
                         <p className="font-medium">{medicine.name}</p>
                         <p className="text-sm text-muted-foreground">Batch: {medicine.batchNumber}</p>

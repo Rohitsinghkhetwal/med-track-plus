@@ -1,6 +1,4 @@
-
-import { useState } from "react";
-import { sales, Sale } from "@/utils/dummyData";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,25 +16,69 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { 
-  PlusCircle, 
-  Search, 
-  MoreVertical, 
-  FileText, 
+import {
+  PlusCircle,
+  Search,
+  MoreVertical,
+  FileText,
   Printer,
-  Eye
+  Eye,
+  Pencil,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import useStore from "@/Store/Store";
+import { useToast } from "@/components/ui/use-toast";
 
 const SalesList = () => {
+
+  const { toast } = useToast();
+
+  const {loading, AllSales, getAllSales} = useStore();
   const [searchTerm, setSearchTerm] = useState("");
-  const [allSales] = useState<Sale[]>(sales);
-  
+
+
+  console.log("this is the sale", AllSales)
+
+
   // Filter sales based on search term
-  const filteredSales = allSales.filter(sale => 
-    sale.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    sale.customerName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSales = AllSales.filter(
+    (sale) =>
+      sale.invoice?.toLowerCase().includes(searchTerm?.toLowerCase()) ||
+      sale.customer?.name.toLowerCase().includes(searchTerm?.toLowerCase())
   );
+
+  
+
+  useEffect(() => {
+    getAllSales();
+  }, []);
+
+  const handleStatusChange = async(id:any, status:any) => {
+    try {
+      const response = await axios.patch(`${import.meta.env.VITE_PUBLIC_API_URL}/updateStatus/${id}`,
+        {paymentStatus: status}
+      )
+      
+      if(response.status === 200) {
+        toast({
+          title: "status added",
+          description: "Status modified successfully !"
+        })
+
+      } 
+
+    }catch(err) {
+      console.log("somethig went wrong here ", err);
+      toast({
+        title: "status not added",
+        description: "Something went wrong!",
+        
+      })
+
+
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -58,7 +100,7 @@ const SalesList = () => {
           </Button>
         </Link>
       </div>
-      
+
       <div className="rounded-md border">
         <div className="relative overflow-auto table-container">
           <Table>
@@ -76,30 +118,37 @@ const SalesList = () => {
             <TableBody>
               {filteredSales.length > 0 ? (
                 filteredSales.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell className="font-medium">{sale.invoiceNumber}</TableCell>
-                    <TableCell>{sale.customerName}</TableCell>
-                    <TableCell>{sale.date}</TableCell>
+                  <TableRow key={sale._id}>
+                    <TableCell className="font-medium">
+                      {sale.invoice}
+                    </TableCell>
+                    <TableCell>{sale.customer.name}</TableCell>
+                    <TableCell>{sale.createdAt}</TableCell>
                     <TableCell>{sale.items.length}</TableCell>
-                    <TableCell>${sale.total.toFixed(2)}</TableCell>
+                    <TableCell>Rs {sale.total}</TableCell>
                     <TableCell>
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                        sale.status === 'paid' 
-                          ? 'bg-green-50 text-green-700 ring-1 ring-green-600/20' 
-                          : sale.status === 'pending' 
-                          ? 'bg-yellow-50 text-yellow-800 ring-1 ring-yellow-600/20'
-                          : 'bg-red-50 text-red-700 ring-1 ring-red-600/20'
-                      }`}>
-                        {sale.status.charAt(0).toUpperCase() + sale.status.slice(1)}
-                      </span>
+                      <select
+                        value={sale.paymentStatus}
+                        onChange={(e) =>
+                          handleStatusChange(sale._id, e.target.value)
+                        } // Optional API update
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium outline-none
+      ${
+        sale.paymentStatus === "paid"
+          ? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
+          : sale.paymentStatus === "pending"
+          ? "bg-yellow-50 text-yellow-800 ring-1 ring-yellow-600/20"
+          : "bg-red-50 text-red-700 ring-1 ring-red-600/20"
+      }`}
+                      >
+                        <option value="paid">Paid</option>
+                        <option value="pending">Pending</option>
+                      </select>
                     </TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button variant="ghost" className="h-8 w-8 p-0">
                             <span className="sr-only">Open menu</span>
                             <MoreVertical className="h-4 w-4" />
                           </Button>
@@ -110,8 +159,8 @@ const SalesList = () => {
                             View
                           </DropdownMenuItem>
                           <DropdownMenuItem>
-                            <Printer className="mr-2 h-4 w-4" />
-                            Print
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem>

@@ -8,7 +8,8 @@ import {
   Users,
   PackageCheck,
   Settings,
-  LogOut
+  LogOut,
+  BrainCircuit,
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -40,6 +41,12 @@ const Sidebar = () => {
       path: "/inventory",
       icon: <PackageCheck className="w-5 h-5" />
     },
+    {
+      name: "PharmAssist",
+      path: "/assist",
+      icon: <BrainCircuit/>
+
+    }
   ];
 
   return (
@@ -75,13 +82,13 @@ const Sidebar = () => {
       
       <div className="p-4 border-t border-sidebar-border">
         <div className="space-y-1">
-          <Link
+          {/* <Link
             to="/settings"
             className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
           >
             <Settings className="w-5 h-5" />
             Settings
-          </Link>
+          </Link> */}
           <button
             className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
           >

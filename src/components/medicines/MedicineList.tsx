@@ -21,8 +21,11 @@ import {
 import { PlusCircle, Search, MoreVertical, Pencil, Trash, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
 import useStore from "@/Store/Store";
+import axios from "axios";
+import { useToast } from "@/components/ui/use-toast";
 
 const MedicineList = () => {
+  const { toast } = useToast();
 
   const { AllMedicine, loading, getAllMedicine } = useStore();
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +41,25 @@ const MedicineList = () => {
     medicine.batch.toLowerCase().includes(searchTerm.toLowerCase()) ||
     medicine.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  console.log("this is all medicine", filteredMedicines)
+
+  const handleDelete = async(id: any) => {
+    try {
+      const result = await axios.delete(`${import.meta.env.VITE_PUBLIC_API_URL}/deleteMed/${id}`);
+      if(result.status === 200) {
+        toast({
+          title: "Deleted Success",
+          description: "Medicine was deleted successfully !",
+        });
+
+      }
+    }catch(err) {
+      console.log("something went wrong while deleting the med !")
+
+    }
+
+  }
 
   useEffect(() => {
     getAllMedicine()
@@ -123,12 +145,17 @@ const MedicineList = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
+                          <DropdownMenuItem className="text-red-600" onClick={() => {
+                              const confirmDelete = window.confirm("Do you want to delete this?");
+                              if (confirmDelete) {
+                                handleDelete(medicine._id); 
+                              }
+                          }}>
                             <Trash className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>

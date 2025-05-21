@@ -246,7 +246,8 @@ export const getCustomerById = (id: string): Customer | undefined => {
 
 // Helper function for low stock medicines (less than 10 units)
 export const getLowStockMedicines = (): Medicine[] => {
-  return medicines.filter(med => med.stock < 10);
+  const { AllMedicine } = useStore()
+  return AllMedicine?.result?.filter(med => med.stock < 10);
 };
 
 // Helper function for expired or nearly expired medicines (within 30 days)

@@ -26,7 +26,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Trash, Plus, FileText, Printer } from "lucide-react";
+import { Trash, Plus, FileText, Printer, Tally1 } from "lucide-react";
 import {
   medicines,
   customers,
@@ -35,6 +35,7 @@ import {
   SaleItem,
 } from "@/utils/dummyData";
 import useStore from "@/Store/Store";
+import axios from "axios";
 
 const CreateInvoice = () => {
   const { toast } = useToast();
@@ -79,7 +80,7 @@ const CreateInvoice = () => {
     setItems(items.filter((item) => item.id !== id));
   };
 
-  const handleCreateInvoice = () => {
+  const handleCreateInvoice = async() => {
     if (items.length === 0 || !selectedCustomer) {
       toast({
         title: "Missing Information",
@@ -88,25 +89,50 @@ const CreateInvoice = () => {
       });
       return;
     }
-
     // In a real app, we would save this to a database
-    console.log({
-      customer: selectedCustomer,
-      items,
-      subtotal,
-      tax,
-      discount,
-      total,
-      paymentStatus
-    });
-    
+    // console.log({
+    //   customer: selectedCustomer,
+    //   items,
+    //   subtotal,
+    //   tax,
+    //   discount,
+    //   total,
+    //   paymentStatus
+    // });
 
-    toast({
-      title: "Invoice Created",
-      description: "The invoice has been successfully created.",
-    });
+    try {
+      const result = await axios.post(`${import.meta.env.VITE_PUBLIC_API_URL}/create-sale`, {
+        customer: selectedCustomer,
+        items: items,
+        subtotal:subtotal,
+        tax: tax,
+        discount: discount,
+        paymentStatus: paymentStatus,
+        total: total
+      },{
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    )
+    const data = result.data;
+    console.log("this is the data", data);
+    if(result.data) {
+      toast({
+        title: "Invoice Created",
+        description: "The invoice has been successfully created.",
+      });
+      navigate("/sales");
+    }
 
-    navigate("/sales");
+    }catch(err) {
+      console.log("Something went wrong here !", err);
+      toast({
+        title: "Something went wrong here !",
+        description: "Invoice not created.."
+
+      })
+    }
   };
 
   return (
@@ -118,12 +144,7 @@ const CreateInvoice = () => {
             Add items and generate an invoice
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <FileText className="mr-2 h-4 w-4" />
-            Save Draft
-          </Button>
-        </div>
+       
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

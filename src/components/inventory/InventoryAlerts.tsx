@@ -17,12 +17,22 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, ArrowUpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import useStore from "@/Store/Store";
+import { useEffect } from "react";
 
 const InventoryAlerts = () => {
+  const { getAllMedicine } = useStore();
   const lowStockItems = getLowStockMedicines();
   const expiringItems = getExpiringMedicines();
   
+  
+  
+  
   const totalAlerts = lowStockItems.length + expiringItems.length;
+
+  useEffect(() => {
+    getAllMedicine();
+  },[])
 
   return (
     <div className="space-y-6">

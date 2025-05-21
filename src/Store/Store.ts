@@ -10,7 +10,9 @@ interface storeState {
   getAllMedicine: () => Promise<void>;
   AllMedicine: [],
   AllCustomer: [],
-  getAllCustomer: () => Promise<void>
+  AllSales: [],
+  getAllCustomer: () => Promise<void>,
+  getAllSales : () => Promise<void>
 
 }
 
@@ -22,6 +24,7 @@ const useStore = create<storeState>()(
       setMedicine: (data) => set({ medicine: data }),
       AllMedicine: [],
       AllCustomer: [],
+      AllSales: [],
       getAllMedicine: async() => {
         try{
           set({loading: true})
@@ -43,6 +46,22 @@ const useStore = create<storeState>()(
         }catch(err) {
           console.log("Something went wrong while getting the customers ")
         }finally{
+          set({loading: false})
+        }
+
+      },
+      getAllSales: async() => {
+        try {
+          set({loading: true})
+          const res = await axios.get(
+            `${import.meta.env.VITE_PUBLIC_API_URL}/getAll-sale`
+          );
+          const data = res.data;
+          set({AllSales: data})
+          return data;
+        } catch (err) {
+          console.log("Something went wrong while getting the sales ....");
+        } finally {
           set({loading: false})
         }
 
